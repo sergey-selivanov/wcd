@@ -28,8 +28,6 @@ apply plugin: 'org.ajoberstar.release-opinion'
 
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.ajoberstar.grgit.Grgit
-//import org.ajoberstar.grgit.*
-//import org.ajoberstar.gradle.git.release.opinion.Strategies
 
 
 sourceCompatibility = 1.6    // see also jdk in gradle.properties, and j2se in jnlp-template.xml
@@ -55,7 +53,6 @@ dependencies {
 
     compile 'org.flywaydb:flyway-core:4.0'
 
-
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.5'
     compile 'org.apache.logging.log4j:log4j-core:2.5'
 }
@@ -80,14 +77,18 @@ println 'version: ' + version.toString()
 processResources {
     from(sourceSets.main.resources){
         include '**/settings.properties'
-        expand(
-            buildDate: new java.util.Date(),
-            //svnRevision: svnrevision,
-            //svnRevisionDate: svndate,
-            version: project.version,
-            //versionTimestamp: String.format('%1$tY-%1$tm-%1$td-%1$tH-%1$tM', svndate),
-            //versionDisplay: String.format('%1$te %1$tb %1$tY (rev. %2$d)', svndate, svnrevision)
-            )
+        filter(ReplaceTokens,
+        tokens:[
+
+            'version.timestamp': String.format('%1$tY-%1$tm-%1$td-%1$tH-%1$tM', repo.head().date),
+            'version.display': String.format('%2$s - %1$te %1$tb %1$tY', repo.head().date, project.version.toString()),
+
+            'git.commit': repo.head().abbreviatedId,
+            'git.date': repo.head().date.toString(),
+            'build.date': new java.util.Date().toString(),
+            'version': project.version.toString(),
+            'build.host': builduser + '@' + buildhost
+            ])
     }
 }
 
@@ -178,7 +179,9 @@ task generateJnlp(dependsOn: [signAll, copyFiles]) << {
 //    j2se.@version = "$sourceCompatibility+"
 
     def collection = files { file("${buildWebstartDir}/lib").listFiles() }
-    def mainJar = "wcd2-${version}.jar"
+    //def mainJar = "wcd2-${version}.jar"
+    def mainJar = archivesBaseName + '-' + version.toString() + '.jar'
+
     collection.each {
         def resourceValues = [href: it.name]
 //println it.name + ' - ' + mainJar
