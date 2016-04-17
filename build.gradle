@@ -30,8 +30,10 @@ import org.apache.tools.ant.filters.ReplaceTokens
 import org.ajoberstar.grgit.Grgit
 
 
-sourceCompatibility = 1.6    // see also jdk in gradle.properties, and j2se in jnlp-template.xml
-targetCompatibility = 1.6
+//sourceCompatibility = 1.6    // see also jdk in gradle.properties, and j2se in jnlp-template.xml
+//targetCompatibility = 1.6
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 mainClassName = 'org.sergeys.webcachedigger.ui.WebCacheDigger'
 
 ext.buildWebstartDir = 'build/webstart'

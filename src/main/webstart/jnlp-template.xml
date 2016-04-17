@@ -28,8 +28,10 @@
 
     <resources>
         <!-- Application Resources -->
-
+<!--
         <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
+ -->
+        <j2se version="1.7+" />
 <!--
         <jar href="wcd.%REVISION%.jar" />
 

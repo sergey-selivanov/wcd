@@ -44,8 +44,9 @@ public class AudioPreviewPanel extends AbstractFilePreviewPanel {
     JPanel panelTop;
     JPanel panelProperties;
     JPanel panelArtwork;
-    //JComboBox<String> comboBoxLanguage;
-    JComboBox comboBoxLanguage; // 1.6
+    JComboBox<String> comboBoxLanguage;
+
+    //JComboBox comboBoxLanguage; // 1.6
 
     private ArrayList<Locale> locales;
     //Properties charsets;
@@ -118,8 +119,8 @@ public class AudioPreviewPanel extends AbstractFilePreviewPanel {
         JLabel lblFixEncoding = new JLabel(Messages.getString("AudioPreviewPanel.lblFixEncoding.text")); //$NON-NLS-1$
         panelCharsets.add(lblFixEncoding);
 
-        //comboBoxLanguage = new JComboBox<String>();
-        comboBoxLanguage = new JComboBox(); // 1.6
+        comboBoxLanguage = new JComboBox<String>();
+        //comboBoxLanguage = new JComboBox(); // 1.6
         comboBoxLanguage.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 doEncodingChanged(e);
