@@ -1,51 +1,50 @@
-/**
- * To make release and increase version, set stage final:
- *
- * gradle release -Prelease.scope=patch -Prelease.stage=final
- * gradle release -Prelease.scope=minor -Prelease.stage=final
- * gradle release -Prelease.scope=major -Prelease.stage=final
- *
- * The change scope can be either MAJOR, MINOR, or PATCH
- * The stage of the change corresponds to the development stage (such as dev, milestone, rc, final)
- */
+/*
 
-buildscript {
-    repositories {
-        //mavenCentral()
-        jcenter()
-    }
-    dependencies {
-        // need to have private key id_rsa and known_hosts in ~/.ssh, on windows too
-        classpath 'org.ajoberstar:gradle-git:1.7.0'
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.14.0'
-    }
+    To make release and increase version:
+        gradle -Preckon.stage=final -Preckon.scope=patch reckonTagPush
+        gradle -Preckon.stage=final -Preckon.scope=minor reckonTagPush
+        gradle -Preckon.stage=final -Preckon.scope=major reckonTagPush
+
+*/
+
+plugins {
+    id 'application'
+    id 'eclipse'
+    id 'org.beryx.jlink' version '2.14.0'
+
+//    id 'net.saliman.properties' version '1.5.1'
+    id 'com.github.ben-manes.versions' version '0.22.0'
+    id 'org.ajoberstar.reckon' version '0.11.0'
 }
 
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'application'
-apply plugin: 'checkstyle'
-apply plugin: 'findbugs'
-apply plugin: 'org.ajoberstar.release-opinion'
-apply plugin: 'com.github.ben-manes.versions'
+repositories {
+    //mavenCentral()
+    jcenter()
+}
+
+if(!project.hasProperty('reckon.scope')){
+    project.ext.'reckon.scope' = 'patch'    // override default 'minor'
+}
+
+reckon {
+    scopeFromProp()
+    stageFromProp('dev', 'final')
+}
+
 
 
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.ajoberstar.grgit.Grgit
 
-//sourceCompatibility = 1.6    // see also jdk in gradle.properties, and j2se in jnlp-template.xml
-//targetCompatibility = 1.6
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+
+//sourceCompatibility = 1.8
+//targetCompatibility = 1.8
 mainClassName = 'org.sergeys.webcachedigger.ui.WebCacheDigger'
 
-ext.buildWebstartDir = 'build/webstart'
-ext.webstartUrl = 'http://svs.bugz.org.ua/wcd2'
-ext.repo = Grgit.open(project.file('.'))
 
-repositories {
-    mavenCentral()
-}
+//ext.repo = Grgit.open(project.file('.'))
+ext.repo = Grgit.open() // fails on 9+?
+
 
 dependencies {
     compile('eu.medsea.mimeutil:mime-util:2.1.3'){
@@ -53,13 +52,13 @@ dependencies {
         exclude module: 'slf4j-log4j12'
     }
 
-    compile 'com.h2database:h2:1.4.194'
-    compile 'com.mpatric:mp3agic:0.9.0'
+    compile 'com.h2database:h2:1.4.199'
+    compile 'com.mpatric:mp3agic:0.9.1'
 
-    compile 'org.flywaydb:flyway-core:4.1.2'
+//    compile 'org.flywaydb:flyway-core:4.1.2'
 
-    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.8.1'
-    compile 'org.apache.logging.log4j:log4j-core:2.8.1'
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.12.0'
+    compile 'org.apache.logging.log4j:log4j-core:2.12.0'
 }
 
 
@@ -71,11 +70,6 @@ def builduser = (val == null ? 'undefined' : val)
 def buildhost = InetAddress.localHost.hostName
 
 
-release {
-    grgit = repo
-}
-
-//tasks.release.dependsOn 'build'
 
 println 'version: ' + version.toString()
 
@@ -95,127 +89,4 @@ processResources {
             'build.host': builduser + '@' + buildhost
             ])
     }
-}
-
-
-// https://github.com/gmateo/gradle-webstart-example/blob/master/build.gradle
-
-jar {
-    manifest {
-        attributes 'Implementation-Title': 'Web Cache Digger',
-            'Implementation-Version': version,
-            'Permissions': 'all-permissions',
-            'Application-Name': 'Web Cache Digger'
-    }
-}
-
-task copyJars(type: Copy, dependsOn: [jar]) {
-    from configurations.runtime
-    from("build/libs")
-    into("$buildWebstartDir/lib")
-    include('*.jar')
-}
-
-task copyFiles(type: Copy) {
-    from("src/main/webstart")
-    into("$buildWebstartDir/signed")
-    include('*.png')
-}
-
-task createKey{
-
-        File ksfile = new File('src/main/webstart/.keystore')
-        if(!ksfile.isFile()){
-            ant.genkey(
-                keystore: 'src/main/webstart/.keystore',
-                storepass: 'password',
-                alias: 'sergey.selivanov',
-                validity: 365
-                ){
-                dname{
-                    param(name: 'CN', value: 'Sergey Selivanov')
-                    param(name: 'OU', value: 'Org Unit')
-                    param(name: 'O', value: 'Org')
-                    param(name: 'C', value: 'UA')
-                    param(name: 'L', value: 'Location')
-                }
-            }
-        }
-    }
-
-
-task signAll(dependsOn: [copyJars, createKey]) << {
-    new File("$buildWebstartDir/signed").mkdirs()
-    def libFiles = files { file("$buildWebstartDir/lib").listFiles() }
-    libFiles.each {
-        ant.signjar(
-                destDir: "${buildWebstartDir}/signed",
-                alias: 'sergey.selivanov',
-                jar: it,
-                keystore: 'src/main/webstart/.keystore',
-                storepass: 'password',
-                preservelastmodified: 'true')
-    }
-}
-
-task generateJnlp(dependsOn: [signAll, copyFiles]) << {
-
-    File jnlpTemplateFile = new File('src/main/webstart/jnlp-template.xml')
-    def root = new XmlParser().parse(jnlpTemplateFile)
-    def jnlpFileName = "wcd2.jnlp"
-
-    root.@codebase = webstartUrl
-    root.@href = jnlpFileName
-
-
-    def information = root.information[0]
-
-    //def icon = information.icon[0]
-    //icon.@href = webstartUrl + '/largeicon.png'
-
-    information.icon.each {
-        it.@href = webstartUrl + '/' + it.@href
-    }
-
-
-    def resource = root.resources[0]
-
-//    def j2se = resource.j2se[0]
-//    j2se.@version = "$sourceCompatibility+"
-
-    def collection = files { file("${buildWebstartDir}/lib").listFiles() }
-    //def mainJar = "wcd2-${version}.jar"
-    def mainJar = archivesBaseName + '-' + version.toString() + '.jar'
-
-    collection.each {
-        def resourceValues = [href: it.name]
-//println it.name + ' - ' + mainJar
-        if (mainJar == it.name) {
-            resourceValues = [href: it.name, main: 'true']
-        }
-        resource.appendNode('jar', resourceValues)
-    }
-
-    // Setting the main class
-    def applicationDesc = root.'application-desc'[0]
-    applicationDesc.'@main-class' = mainClassName
-
-    // Writing the jnlp file filled
-    File jnlpFile = new File("${buildWebstartDir}/signed/" + jnlpFileName)
-
-    def prn = new XmlNodePrinter(new PrintWriter(jnlpFile))
-    prn.setPreserveWhitespace(true)
-    prn.print(root)
-}
-
-task webstart (dependsOn: [generateJnlp])<< {
-    println("Generating all webstart files in ${buildWebstartDir}/signed")
-}
-
-checkstyle {
-    ignoreFailures = true
-}
-
-findbugs {
-    ignoreFailures = true
 }
