@@ -42,9 +42,9 @@ ext.moduleName = 'webcachedigger';
 
 //sourceCompatibility = 1.8
 //targetCompatibility = 1.8
-//mainClassName = 'org.sergeys.webcachedigger.ui.WebCacheDigger'
+mainClassName = 'org.sergeys.webcachedigger.ui.WebCacheDigger'
 //mainClassName = "$moduleName/org.sergeys.webcachedigger.ui.WebCacheDigger"
-mainClassName = "webcachedigger/org.sergeys.webcachedigger.ui.WebCacheDigger"
+//mainClassName = "webcachedigger/org.sergeys.webcachedigger.ui.WebCacheDigger"
 
 
 //ext.repo = Grgit.open(project.file('.'))
