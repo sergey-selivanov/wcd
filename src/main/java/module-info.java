@@ -1,12 +1,17 @@
 module webcachedigger {
     requires java.desktop;
     requires java.sql;
+    
 
     requires mp3agic;
     requires slf4j.api;
     requires mime.util;
-    requires org.apache.logging.log4j;
-
+    
+    // java.lang.NoClassDefFoundError: org/apache/logging/log4j/spi/AbstractLoggerAdapter
+    // if uncommented??
+    //requires org.apache.logging.log4j.slf4j;
+    requires org.apache.logging.log4j; // highlighted red in eclipse but required to run properly instead of line above?? 
+       
     requires com.h2database;
 
 

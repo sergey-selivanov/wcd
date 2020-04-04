@@ -357,8 +357,8 @@ implements ActionListener, PropertyChangeListener
                     if(laf == null || laf.equals("default") || laf.isEmpty()) //$NON-NLS-1$
                     {
                         // looks like old name is used in 1.6 on macosx and this not works
-                        //UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-                        UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel"); //$NON-NLS-1$
+                        UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+                        //UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel"); //$NON-NLS-1$
                     }
                     else{
                         UIManager.setLookAndFeel(laf);
